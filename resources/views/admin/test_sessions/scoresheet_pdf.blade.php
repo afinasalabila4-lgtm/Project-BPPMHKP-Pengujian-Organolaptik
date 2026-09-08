@@ -95,23 +95,6 @@ body {
 }
 
 
-.total-row td {
-
-    font-weight:bold;
-
-}
-
-
-.ttd-table {
-
-    margin-top:80px;
-    width:100%;
-    border-collapse:collapse;
-    text-align:center;
-
-}
-
-
 </style>
 
 
@@ -138,12 +121,6 @@ foreach($assessment->details as $detail)
     ];
 
 }
-
-$total = $assessment->details->sum('nilai');
-
-$jumlah = count($assessment->details);
-
-$rataRata = $jumlah > 0 ? round($total/$jumlah,2) : 0;
 
 $sections = $assessment->details
     ->map(fn($d)=>$d->criteria->assessmentSection)
@@ -223,26 +200,19 @@ NIP :
 
 <tr>
 
-<th>No</th>
+<th>Spesifikasi</th>
 
-<th>Kriteria</th>
-
-<th>Nilai</th>
-
-<th>Deskripsi</th>
+<th>Nilai (1 s.d 9)</th>
 
 </tr>
 
-
-
-@php $no=0; @endphp
 
 
 @foreach($sections as $section)
 
 <tr class="section-row">
 
-<td colspan="4">
+<td colspan="2">
 
 ■ {{ $section->nama_section ?? 'Section' }}
 
@@ -253,24 +223,7 @@ NIP :
 
 @foreach($assessment->details->filter(fn($d)=>$d->criteria->assessment_section_id===$section->id)->sortBy(fn($d)=>(int)$d->id) as $detail)
 
-@php
-
-$no++;
-
-$deskripsi = $detail->criteria->options
-    ->where('nilai',$detail->nilai)
-    ->first();
-
-@endphp
-
-
 <tr>
-
-<td>
-
-{{ $no }}
-
-</td>
 
 <td class="left">
 
@@ -284,116 +237,12 @@ $deskripsi = $detail->criteria->options
 
 </td>
 
-<td class="left">
-
-{{ $deskripsi?->deskripsi ?? '-' }}
-
-</td>
-
 </tr>
 
 
 @endforeach
 
 @endforeach
-
-
-<tr class="total-row">
-
-<td colspan="2">
-
-Jumlah
-
-</td>
-
-<td>
-
-{{ $total }}
-
-</td>
-
-<td>
-
-</td>
-
-</tr>
-
-
-<tr class="total-row">
-
-<td colspan="2">
-
-Rata-rata
-
-</td>
-
-<td>
-
-{{ number_format($rataRata,2) }}
-
-</td>
-
-<td>
-
-</td>
-
-</tr>
-
-
-</table>
-
-
-
-<table class="ttd-table">
-
-<tr>
-
-<td style="width:50%">
-
-Panelis
-
-</td>
-
-<td style="width:50%">
-
-Penyelia
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="height:60px">
-
-&nbsp;
-
-</td>
-
-<td>
-
-&nbsp;
-
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-
-(........................................)
-
-</td>
-
-<td>
-
-(........................................)
-
-</td>
-
-</tr>
 
 </table>
 

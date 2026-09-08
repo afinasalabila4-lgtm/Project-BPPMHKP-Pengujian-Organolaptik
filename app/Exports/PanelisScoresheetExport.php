@@ -27,16 +27,14 @@ class PanelisScoresheetExport implements FromArray, WithEvents
     public function array(): array
     {
 
-        $rows = [];
-
         $assessment = $this->assessment;
 
         $assessment->load([
             'user',
+            'testSession.sample.product',
             'details.criteria.assessmentSection',
             'details.criteria.options'
         ]);
-
 
 
         $info = $assessment->testSession;
@@ -53,56 +51,59 @@ class PanelisScoresheetExport implements FromArray, WithEvents
         }
 
 
+        $rows = [];
+
+
         /*
         JUDUL
         */
 
         $rows[] = ['SCORESHEET PENILAIAN PANELIS'];
 
-        $rows[] = [];
 
         /*
-        INFORMASI
+        INFORMASI (labell kiri, nilai kanan)
         */
 
         $rows[] = [
-            'Produk : ' . ($info?->sample?->product?->nama_produk ?? '-')
+            'Produk',
+            ($info?->sample?->product?->nama_produk ?? '-')
         ];
 
         $rows[] = [
-            'Nomor Sample : ' . ($info?->sample?->nomor_sample ?? '-')
+            'Nomor Sample',
+            ($info?->sample?->nomor_sample ?? '-')
         ];
 
         $rows[] = [
-            'Tanggal Pengujian : ' . ($info?->tanggal_pengujian ?? '-')
+            'Tanggal Pengujian',
+            ($info?->tanggal_pengujian ?? '-')
         ];
-
-        $rows[] = [];
 
         $rows[] = [
-            'Nama Panelis : ' . ($assessment->user->name ?? '-'),
-            '',
-            '',
-            'NIP : ' . ($assessment->user->nip ?? '-')
+            'Nama Panelis',
+            ($assessment->user->name ?? '-') .
+                '        NIP : ' .
+                ($assessment->user->nip ?? '-')
         ];
 
-        $rows[] = [];
 
         /*
-        HEADER
+        JARAK ANTARA INFORMASI & TABEL
         */
 
-        $rows[] = [
-            'No',
-            'Kriteria',
-            'Nilai',
-            'Deskripsi'
-        ];
+        $rows[] = [' '];
 
 
-        $no = 0;
+        /*
+        HEADER TABEL
+        */
 
-        $total = 0;
+$rows[] = [
+                'Spesifikasi',
+                'Nilai (1 s.d 9)'
+            ];
+
 
         $sections = $assessment
             ->details
@@ -118,81 +119,20 @@ class PanelisScoresheetExport implements FromArray, WithEvents
                 ->values();
 
             $rows[] = [
-                '',
                 '■ ' . ($section->nama_section ?? 'Section'),
-                '',
-                ''
+                ' '
             ];
 
             foreach ($criterias as $criteria) {
 
-                $no++;
-
                 $nilai = $data[$criteria->id]['nilai'] ?? null;
 
-                $deskripsi = $criteria->options
-                    ->where('nilai', $nilai)
-                    ->first();
-
-                $total += $nilai ?? 0;
-
                 $rows[] = [
-                    $no,
                     $criteria->nama_kriteria,
-                    $nilai ?? '-',
-                    $deskripsi?->deskripsi ?? '-'
+                    $nilai ?? '-'
                 ];
             }
         }
-
-
-        $jumlah = count($assessment->details);
-
-        $rataRata = $jumlah > 0
-            ? round($total / $jumlah, 2)
-            : 0;
-
-
-        $rows[] = [];
-
-        $rows[] = [
-            '',
-            'Jumlah',
-            $total,
-            ''
-        ];
-
-        $rows[] = [
-            '',
-            'Rata-rata',
-            number_format($rataRata, 2),
-            ''
-        ];
-
-        $rows[] = [];
-
-        /*
-        TANDA TANGAN
-        */
-
-        $rows[] = [
-            'Panelis',
-            '',
-            '',
-            'Penyelia'
-        ];
-
-        $rows[] = [];
-        $rows[] = [];
-        $rows[] = [];
-        $rows[] = [];
-
-        $rows[] = [
-            '(........................................)',
-            '',
-            '',
-            '(........................................)'
-        ];
 
 
         return $rows;
@@ -213,7 +153,7 @@ class PanelisScoresheetExport implements FromArray, WithEvents
 
 
                 $sheet
-                    ->getStyle('A1:D40')
+                    ->getStyle('A1:D60')
                     ->getFont()
                     ->setName('Times New Roman');
 
@@ -237,16 +177,20 @@ class PanelisScoresheetExport implements FromArray, WithEvents
                         Alignment::HORIZONTAL_CENTER
                     );
 
+                $sheet
+                    ->getRowDimension(1)
+                    ->setRowHeight(28);
+
 
                 /*
                 WIDTH
                 */
 
                 $width = [
-                    'A' => 6,
-                    'B' => 35,
-                    'C' => 10,
-                    'D' => 60,
+                    'A' => 40,
+                    'B' => 14,
+                    'C' => 30,
+                    'D' => 15,
                 ];
 
                 foreach ($width as $col => $size) {
@@ -258,16 +202,32 @@ class PanelisScoresheetExport implements FromArray, WithEvents
 
 
                 /*
-                DATA PANELIS KIRI
+                INFORMASI (LABEL KIRI, NILAI KANAN)
                 */
 
+                $sheet->mergeCells('B2:C2');
+                $sheet->mergeCells('B3:C3');
+                $sheet->mergeCells('B4:C4');
+                $sheet->mergeCells('B5:D5');
+
                 $sheet
-                    ->getStyle('A7')
+                    ->getStyle('A2:A5')
                     ->getAlignment()
                     ->setHorizontal(
                         Alignment::HORIZONTAL_LEFT
                     );
 
+                $sheet
+                    ->getStyle('B2:D5')
+                    ->getAlignment()
+                    ->setHorizontal(
+                        Alignment::HORIZONTAL_LEFT
+                    );
+
+
+                /*
+                TABEL (HANYA KOLOM A:B)
+                */
 
                 $nData = count($this->assessment->details);
                 $nSection = $this->assessment
@@ -276,14 +236,13 @@ class PanelisScoresheetExport implements FromArray, WithEvents
                     ->unique('id')
                     ->count();
 
-                $headerRow = 8;
+                $headerRow = 7;
 
                 $lastDataRow = $headerRow + $nSection + $nData;
 
-
                 $sheet
                     ->getStyle(
-                        'A' . $headerRow . ':D' . $lastDataRow
+                        'A' . $headerRow . ':B' . $lastDataRow
                     )
                     ->getBorders()
                     ->getAllBorders()
@@ -293,14 +252,14 @@ class PanelisScoresheetExport implements FromArray, WithEvents
 
                 $sheet
                     ->getStyle(
-                        'A' . $headerRow . ':D' . $headerRow
+                        'A' . $headerRow . ':B' . $headerRow
                     )
                     ->getFont()
                     ->setBold(true);
 
                 $sheet
                     ->getStyle(
-                        'A' . $headerRow . ':D' . $lastDataRow
+                        'A' . $headerRow . ':B' . $lastDataRow
                     )
                     ->getAlignment()
                     ->setHorizontal(
@@ -309,63 +268,11 @@ class PanelisScoresheetExport implements FromArray, WithEvents
 
                 $sheet
                     ->getStyle(
-                        'B' . $headerRow . ':B' . $lastDataRow
+                        'A' . $headerRow . ':A' . $lastDataRow
                     )
                     ->getAlignment()
                     ->setHorizontal(
                         Alignment::HORIZONTAL_LEFT
-                    );
-
-                $sheet
-                    ->getStyle(
-                        'D' . $headerRow . ':D' . $lastDataRow
-                    )
-                    ->getAlignment()
-                    ->setHorizontal(
-                        Alignment::HORIZONTAL_LEFT
-                    );
-
-
-                /*
-                JUMLAH & RATA-RATA
-                */
-
-                $jumlahRow = $lastDataRow + 2;
-                $rataRow = $lastDataRow + 3;
-
-                $sheet
-                    ->getStyle(
-                        'A' . $jumlahRow . ':D' . $rataRow
-                    )
-                    ->getFont()
-                    ->setBold(true);
-
-                $sheet
-                    ->getStyle(
-                        'A' . $jumlahRow . ':D' . $rataRow
-                    )
-                    ->getAlignment()
-                    ->setHorizontal(
-                        Alignment::HORIZONTAL_CENTER
-                    );
-
-
-                /*
-                TANDA TANGAN
-                */
-
-                $ttdRow = $jumlahRow + 7;
-
-                $sheet->mergeCells('A' . $ttdRow . ':B' . $ttdRow);
-                $sheet->mergeCells('C' . $ttdRow . ':D' . $ttdRow);
-
-                $sheet
-                    ->getStyle(
-                        'A' . $ttdRow . ':D' . ($ttdRow + 4)
-                    )
-                    ->getAlignment()
-                    ->setHorizontal(
-                        Alignment::HORIZONTAL_CENTER
                     );
             }
 

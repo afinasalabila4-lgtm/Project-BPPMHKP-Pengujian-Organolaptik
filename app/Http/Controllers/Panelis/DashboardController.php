@@ -25,6 +25,9 @@ public function index()
         'user_id',
         $user->id
     )
+    ->whereHas('testSession', function ($query) {
+        $query->where('status', 'dibuka');
+    })
     ->with([
         'testSession.sample.product.assessmentTemplates.sections.criterias',
         'testSession.assessments'

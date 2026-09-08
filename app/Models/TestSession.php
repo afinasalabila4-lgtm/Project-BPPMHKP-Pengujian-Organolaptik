@@ -56,16 +56,10 @@ class TestSession extends Model
 
 
 
-    public function semuaPanelisSudahMengisi(): bool
+    public function nilaiAkhirMutuSudahKeluar(): bool
     {
 
-        $jumlahPanelis = $this
-            ->sessionUsers()
-            ->where('role', 'panelis')
-            ->count();
-
-        return $jumlahPanelis > 0
-            && $this->assessments()->count() >= $jumlahPanelis;
+        return $this->assessments()->count() > 0;
 
     }
 
@@ -76,7 +70,7 @@ class TestSession extends Model
 
         if (
             $this->status !== 'selesai'
-            && $this->semuaPanelisSudahMengisi()
+            && $this->nilaiAkhirMutuSudahKeluar()
         ) {
 
             $this->update([

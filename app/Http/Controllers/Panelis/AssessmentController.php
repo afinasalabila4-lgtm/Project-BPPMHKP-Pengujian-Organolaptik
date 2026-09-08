@@ -23,6 +23,12 @@ class AssessmentController extends Controller
     public function create(TestSession $testSession)
     {
 
+        abort_unless(
+            $testSession->status === 'dibuka',
+            403,
+            'Sesi pengujian belum dibuka atau sudah selesai.'
+        );
+
 
         $testSession->load([
 
@@ -68,6 +74,12 @@ class AssessmentController extends Controller
         TestSession $testSession
     )
     {
+
+        abort_unless(
+            $testSession->status === 'dibuka',
+            403,
+            'Sesi pengujian belum dibuka atau sudah selesai.'
+        );
 
 
         $sudahDinilai = Assessment::where(
@@ -164,7 +176,7 @@ class AssessmentController extends Controller
         ]);
 
 
-        $this->selesaikanSesiJikaSemuaPanelisMengisi(
+        $this->selesaikanSesiJikaNilaiAkhirMutuKeluar(
             $testSession
         );
 
@@ -184,7 +196,7 @@ class AssessmentController extends Controller
     }
 
 
-    private function selesaikanSesiJikaSemuaPanelisMengisi(
+    private function selesaikanSesiJikaNilaiAkhirMutuKeluar(
         TestSession $testSession
     ) {
 
