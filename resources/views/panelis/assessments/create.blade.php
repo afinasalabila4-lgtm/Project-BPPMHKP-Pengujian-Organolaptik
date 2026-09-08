@@ -393,20 +393,6 @@ text-slate-800
 
 </div>
 
-<h2 class="
-text-2xl
-font-black
-text-slate-800
-">
-
-{{ $section->nama_section }}
-
-</h2>
-
-
-
-</div>
-
 @foreach($section->criterias as $criteria)
 
 

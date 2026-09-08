@@ -92,13 +92,6 @@
 
                             <th class="border p-3">
 
-                                Deskripsi
-
-                            </th>
-
-
-                            <th class="border p-3">
-
                                 Aksi
 
                             </th>
@@ -136,15 +129,7 @@
                             </td>
 
 
-                            <td class="border p-3">
-
-                                {{ $item->deskripsi }}
-
-                            </td>
-
-
                             <td class="border p-3 text-center">
-
 
                                 <form action="{{ route('admin.criteria_options.destroy',$item->id) }}"
 
@@ -185,7 +170,7 @@
                         <tr>
 
 
-                            <td colspan="4"
+                            <td colspan="3"
 
                                 class="border p-4 text-center">
 
